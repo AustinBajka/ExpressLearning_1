@@ -1,12 +1,27 @@
 import express from 'express';
 import path from 'path';
 import posts from './routes/posts.js';
+import logger from './middleware/logger.js';
+import errorHandler from './middleware/error.js';
+import { error } from 'console';
 
 
 const port = process.env.PORT || 8080;
 
 
 const app = express();
+
+// ** Logger middleware ** //
+app.use(logger);
+
+// ** Body parser middleware
+/*
+    handles
+*/
+app.use(express.json());
+app.use(express.urlencoded({extended: false})) // choosing to use the querystring library over qs library
+
+
 
 
 // setup static folder
@@ -54,6 +69,19 @@ app.get('/api/posts/:id', (req, res) => {
 */
 app.use('/api/posts', posts);
 
+// ** Global Catchall Error handling ** //
+app.use((req, res, next) => {
+    const error = new Error('Not Found');
+    error.status = 404;
+    next(error);
+})
+
+
+// ** Error handler ** //
+app.use(errorHandler);
+
+// ** GET ** //
+
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html') );
 });
@@ -61,5 +89,6 @@ app.get('/', (req, res) => {
 app.get('/about', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'about.html') );
 });
+
 
 app.listen(port, () => console.log('Server running on port 8080'));
